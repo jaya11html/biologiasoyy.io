@@ -1,0 +1,2440 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>Petualangan Pahlawan Sehat vs Pasukan Virus Corona</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@500;600;700&family=Nunito:wght@600;700;800;900&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --sky: #4CC9F0;
+      --sun: #FFD166;
+      --mint: #06D6A0;
+      --cream: #FFFDF9;
+      --coral: #EF476F;
+      --dark: #1D3557;
+      --purple: #7209B7;
+      --shadow-soft: 0 10px 25px rgba(29, 53, 87, 0.16);
+    }
+
+    * {
+      box-sizing: border-box;
+      user-select: none;
+      -webkit-user-select: none;
+      -webkit-touch-callout: none;
+      margin: 0;
+      padding: 0;
+    }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: var(--sky);
+      font-family: 'Nunito', sans-serif;
+      color: var(--dark);
+      touch-action: none;
+    }
+
+    #game-wrapper {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+
+    /* Typography & Buttons */
+    h1, h2, h3, .font-title {
+      font-family: 'Fredoka', sans-serif;
+      letter-spacing: 0.4px;
+    }
+
+    .btn-3d {
+      font-family: 'Fredoka', sans-serif;
+      font-weight: 700;
+      border: none;
+      border-radius: 20px;
+      padding: 12px 24px;
+      font-size: 1.05rem;
+      cursor: pointer;
+      transition: transform 0.1s ease, filter 0.15s ease;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      text-align: center;
+    }
+
+    .btn-3d:hover {
+      filter: brightness(1.05);
+      transform: translateY(-2px);
+    }
+
+    .btn-3d:active {
+      transform: translateY(4px);
+    }
+
+    .btn-mint {
+      background: var(--mint);
+      color: #073B4C;
+      border-bottom: 6px solid #049A73;
+    }
+
+    .btn-sun {
+      background: var(--sun);
+      color: #3D2C00;
+      border-bottom: 6px solid #D9A426;
+    }
+
+    .btn-coral {
+      background: var(--coral);
+      color: #FFFFFF;
+      border-bottom: 6px solid #B82548;
+    }
+
+    .btn-sky {
+      background: var(--sky);
+      color: #073B4C;
+      border-bottom: 6px solid #2596BE;
+    }
+
+    /* Animations */
+    @keyframes bouncePop {
+      0% { transform: scale(0.82); opacity: 0; }
+      70% { transform: scale(1.04); opacity: 1; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+
+    @keyframes floatSlow {
+      0%, 100% { transform: translateY(0px); }
+      50% { transform: translateY(-8px); }
+    }
+
+    @keyframes pulseGlow {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(6, 214, 160, 0.5); }
+      50% { box-shadow: 0 0 0 12px rgba(6, 214, 160, 0); }
+    }
+
+    /* HUD Top Bar */
+    #hud {
+      position: absolute;
+      top: 12px;
+      left: 12px;
+      right: 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 10px;
+      pointer-events: none;
+      z-index: 15;
+    }
+
+    .hud-group {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 8px;
+      pointer-events: auto;
+    }
+
+    .hud-pill {
+      background: rgba(255, 253, 249, 0.94);
+      border: 3px solid var(--dark);
+      border-radius: 20px;
+      padding: 6px 14px;
+      box-shadow: 0 4px 0 var(--dark);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: 800;
+      font-size: 0.92rem;
+    }
+
+    .hp-bar-wrap {
+      width: 110px;
+      height: 14px;
+      background: #E2E8F0;
+      border-radius: 99px;
+      border: 2px solid var(--dark);
+      overflow: hidden;
+    }
+
+    .hp-bar-fill {
+      height: 100%;
+      width: 100%;
+      background: linear-gradient(90deg, var(--coral), #FF758F);
+      transition: width 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    .shield-badge {
+      background: var(--mint);
+      color: #073B4C;
+      padding: 3px 10px;
+      border-radius: 12px;
+      font-size: 0.8rem;
+      font-weight: 900;
+      border: 2px solid var(--dark);
+      display: none;
+    }
+
+    .shield-badge.active {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      animation: pulseGlow 1.5s infinite;
+    }
+
+    .btn-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 16px;
+      padding: 0;
+      font-size: 1.2rem;
+      border: 3px solid var(--dark);
+      border-bottom-width: 5px;
+      background: var(--cream);
+      color: var(--dark);
+    }
+
+    /* Overlay Screens */
+    .overlay-screen {
+      position: absolute;
+      inset: 0;
+      background: rgba(29, 53, 87, 0.55);
+      backdrop-filter: blur(5px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      z-index: 30;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    .modal-card {
+      background: var(--cream);
+      border: 4px solid var(--dark);
+      border-radius: 28px;
+      box-shadow: 0 12px 0 var(--dark), var(--shadow-soft);
+      width: 100%;
+      max-width: 760px;
+      max-height: 92vh;
+      overflow-y: auto;
+      padding: 24px;
+      animation: bouncePop 0.35s ease-out;
+      text-align: center;
+    }
+
+    .badge-tag {
+      display: inline-block;
+      background: var(--sun);
+      color: var(--dark);
+      font-weight: 900;
+      font-size: 0.82rem;
+      padding: 5px 14px;
+      border-radius: 99px;
+      border: 2px solid var(--dark);
+      margin-bottom: 10px;
+      text-transform: uppercase;
+    }
+
+    .game-title {
+      font-size: clamp(1.65rem, 4vw, 2.45rem);
+      color: var(--dark);
+      line-height: 1.15;
+      margin-bottom: 8px;
+    }
+
+    .game-subtitle {
+      font-size: 0.98rem;
+      color: #4A5568;
+      max-width: 580px;
+      margin: 0 auto 20px;
+      line-height: 1.5;
+    }
+
+    /* Character Selection Cards */
+    .char-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+
+    .char-card {
+      background: #FFFFFF;
+      border: 3px solid var(--dark);
+      border-bottom-width: 7px;
+      border-radius: 22px;
+      padding: 16px;
+      cursor: pointer;
+      transition: all 0.18s ease;
+      position: relative;
+      text-align: center;
+    }
+
+    .char-card:hover {
+      transform: translateY(-4px);
+      background: #F0F9FF;
+    }
+
+    .char-card.selected {
+      background: #E6FCF5;
+      border-color: #049A73;
+      box-shadow: 0 0 0 4px rgba(6, 214, 160, 0.35);
+    }
+
+    .char-card.selected::after {
+      content: "✓ DIPILIH";
+      position: absolute;
+      top: 10px;
+      right: 10px;
+      background: var(--mint);
+      color: var(--dark);
+      font-size: 0.72rem;
+      font-weight: 900;
+      padding: 3px 9px;
+      border-radius: 10px;
+      border: 2px solid var(--dark);
+    }
+
+    .char-preview {
+      width: 110px;
+      height: 110px;
+      margin: 0 auto 8px;
+      animation: floatSlow 2.6s ease-in-out infinite;
+    }
+
+    .char-name {
+      font-size: 1.25rem;
+      margin-bottom: 4px;
+      color: var(--dark);
+    }
+
+    .char-perk {
+      display: inline-block;
+      background: #FFF3BF;
+      border: 2px solid var(--dark);
+      border-radius: 12px;
+      padding: 3px 10px;
+      font-size: 0.78rem;
+      font-weight: 800;
+      margin-bottom: 8px;
+    }
+
+    .char-desc {
+      font-size: 0.86rem;
+      color: #4A5568;
+      line-height: 1.4;
+    }
+
+    /* Battle Arena UI */
+    #battle-ui {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      padding: 72px 16px 16px;
+      z-index: 25;
+    }
+
+    .boss-status-bar {
+      align-self: center;
+      background: rgba(255, 253, 249, 0.96);
+      border: 3px solid var(--dark);
+      border-radius: 20px;
+      padding: 10px 18px;
+      box-shadow: 0 6px 0 var(--dark);
+      width: 100%;
+      max-width: 520px;
+      text-align: center;
+      pointer-events: auto;
+      animation: bouncePop 0.3s ease;
+    }
+
+    .boss-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 6px;
+      font-weight: 800;
+      font-size: 0.95rem;
+    }
+
+    .boss-hp-track {
+      width: 100%;
+      height: 16px;
+      background: #E2E8F0;
+      border-radius: 99px;
+      border: 2px solid var(--dark);
+      overflow: hidden;
+    }
+
+    .boss-hp-fill {
+      height: 100%;
+      width: 100%;
+      background: linear-gradient(90deg, var(--purple), var(--coral));
+      transition: width 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    .battle-panel {
+      align-self: center;
+      width: 100%;
+      max-width: 780px;
+      background: rgba(255, 253, 249, 0.98);
+      border: 4px solid var(--dark);
+      border-radius: 24px;
+      box-shadow: 0 10px 0 var(--dark);
+      padding: 18px 20px;
+      pointer-events: auto;
+      animation: bouncePop 0.3s ease;
+      max-height: 56vh;
+      overflow-y: auto;
+    }
+
+    .dialogue-box {
+      background: #EDF2F7;
+      border: 2px solid var(--dark);
+      border-radius: 16px;
+      padding: 12px 15px;
+      margin-bottom: 12px;
+      font-size: 0.98rem;
+      font-weight: 700;
+      line-height: 1.45;
+      color: var(--dark);
+      min-height: 58px;
+    }
+
+    .question-prompt {
+      font-family: 'Fredoka', sans-serif;
+      font-size: 1.12rem;
+      color: var(--dark);
+      margin-bottom: 12px;
+      line-height: 1.35;
+    }
+
+    .options-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+    }
+
+    @media (max-width: 640px) {
+      .options-grid {
+        grid-template-columns: 1fr;
+      }
+      .battle-panel {
+        padding: 14px;
+        max-height: 60vh;
+      }
+    }
+
+    .option-btn {
+      background: #FFFFFF;
+      border: 3px solid var(--dark);
+      border-bottom-width: 5px;
+      border-radius: 16px;
+      padding: 10px 14px;
+      text-align: left;
+      font-family: 'Nunito', sans-serif;
+      font-weight: 800;
+      font-size: 0.92rem;
+      color: var(--dark);
+      cursor: pointer;
+      transition: transform 0.1s, background 0.15s;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .option-btn:hover:not(:disabled) {
+      background: #E0F7FA;
+      transform: translateY(-2px);
+    }
+
+    .option-btn:active:not(:disabled) {
+      transform: translateY(3px);
+    }
+
+    .option-btn:disabled {
+      cursor: default;
+      opacity: 0.85;
+    }
+
+    .option-letter {
+      background: var(--sun);
+      border: 2px solid var(--dark);
+      border-radius: 10px;
+      width: 28px;
+      height: 28px;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Fredoka', sans-serif;
+      font-weight: 700;
+    }
+
+    .fact-card {
+      background: #E6FCF5;
+      border: 3px solid #049A73;
+      border-radius: 18px;
+      padding: 14px 16px;
+      margin-top: 8px;
+      text-align: left;
+    }
+
+    .fact-card.wrong {
+      background: #FFF0F3;
+      border-color: var(--coral);
+    }
+
+    .fact-title {
+      font-family: 'Fredoka', sans-serif;
+      font-size: 1.05rem;
+      margin-bottom: 4px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .fact-text {
+      font-size: 0.92rem;
+      line-height: 1.45;
+      color: var(--dark);
+      margin-bottom: 12px;
+    }
+
+    /* Mobile Touch Controls */
+    #touch-controls {
+      position: absolute;
+      bottom: 18px;
+      left: 18px;
+      right: 18px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      pointer-events: none;
+      z-index: 20;
+    }
+
+    .dpad-group, .action-group {
+      display: flex;
+      gap: 12px;
+      pointer-events: auto;
+    }
+
+    .touch-btn {
+      width: 64px;
+      height: 64px;
+      border-radius: 22px;
+      background: rgba(255, 253, 249, 0.86);
+      border: 3px solid var(--dark);
+      border-bottom-width: 6px;
+      box-shadow: 0 6px 14px rgba(0,0,0,0.18);
+      font-family: 'Fredoka', sans-serif;
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--dark);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+    }
+
+    .touch-btn:active, .touch-btn.pressed {
+      transform: translateY(4px);
+      background: var(--sun);
+    }
+
+    .touch-jump {
+      width: 74px;
+      height: 74px;
+      background: rgba(6, 214, 160, 0.92);
+      font-size: 1rem;
+    }
+
+    /* End Screen Stats */
+    .stats-row {
+      display: flex;
+      justify-content: center;
+      gap: 14px;
+      flex-wrap: wrap;
+      margin: 16px 0;
+    }
+
+    .stat-box {
+      background: #FFFFFF;
+      border: 3px solid var(--dark);
+      border-radius: 18px;
+      padding: 12px 18px;
+      min-width: 130px;
+    }
+
+    .stat-val {
+      font-family: 'Fredoka', sans-serif;
+      font-size: 1.5rem;
+      color: var(--coral);
+    }
+
+    .stat-lbl {
+      font-size: 0.8rem;
+      font-weight: 800;
+      color: #4A5568;
+    }
+  </style>
+</head>
+<body>
+  <div id="game-wrapper">
+    <canvas id="gameCanvas"></canvas>
+
+    <!-- Top HUD -->
+    <div id="hud" class="hidden">
+      <div class="hud-group">
+        <div class="hud-pill">
+          <span id="hud-hero-icon">🦸</span>
+          <div>
+            <div style="font-size:0.75rem; color:#4A5568;">ENERGI SEHAT</div>
+            <div class="hp-bar-wrap">
+              <div id="hud-hp-fill" class="hp-bar-fill"></div>
+            </div>
+          </div>
+          <span id="hud-hp-text">100/100</span>
+        </div>
+
+        <div class="hud-pill">
+          <span>⭐</span>
+          <span id="hud-score">0</span>
+        </div>
+
+        <div id="hud-shield" class="shield-badge">
+          🛡️ PERISAI AKTIF
+        </div>
+      </div>
+
+      <div class="hud-group">
+        <div class="hud-pill" id="hud-stage-pill">
+          📍 Pos 1 / 4
+        </div>
+        <button id="btn-guide" class="btn-3d btn-icon" title="Catatan Ilmu Virus Corona">📘</button>
+        <button id="btn-mute" class="btn-3d btn-icon" title="Suara On/Off">🔊</button>
+      </div>
+    </div>
+
+    <!-- Battle UI Overlay -->
+    <div id="battle-ui" class="hidden">
+      <div class="boss-status-bar">
+        <div class="boss-header">
+          <span id="boss-name-label">👾 Boss Virus</span>
+          <span id="boss-hp-label">HP: 100/100</span>
+        </div>
+        <div class="boss-hp-track">
+          <div id="boss-hp-fill" class="boss-hp-fill"></div>
+        </div>
+      </div>
+
+      <div class="battle-panel">
+        <div id="battle-dialogue" class="dialogue-box"></div>
+        <div id="battle-quiz-area" class="hidden">
+          <div id="battle-question" class="question-prompt"></div>
+          <div id="battle-options" class="options-grid"></div>
+        </div>
+        <div id="battle-feedback" class="fact-card hidden">
+          <div id="feedback-title" class="fact-title"></div>
+          <div id="feedback-text" class="fact-text"></div>
+          <button id="btn-battle-next" class="btn-3d btn-mint" style="width:100%;">Lanjutkan Aksi ⚡</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Touch Controls -->
+    <div id="touch-controls" class="hidden">
+      <div class="dpad-group">
+        <button id="touch-left" class="touch-btn" aria-label="Kiri">◀</button>
+        <button id="touch-right" class="touch-btn" aria-label="Kanan">▶</button>
+      </div>
+      <div class="action-group">
+        <button id="touch-jump" class="touch-btn touch-jump" aria-label="Lompat">LOMPAT</button>
+      </div>
+    </div>
+
+    <!-- Start / Character Select Screen -->
+    <div id="screen-start" class="overlay-screen">
+      <div class="modal-card">
+        <div class="badge-tag">✨ Game Edukasi Interaktif SARS-CoV-2</div>
+        <h1 class="game-title">Petualangan Pahlawan Sehat vs Pasukan Virus Corona</h1>
+        <p class="game-subtitle">
+          Jelajahi kota, kumpulkan perlindungan sehat, hindari virus liar, dan kalahkan 4 Boss Virus dengan ilmu seputar <strong>SARS-CoV-2, Struktur Virus, Cara Penularan, & Siklus Litik</strong>!
+        </p>
+
+        <div class="char-grid">
+          <div class="char-card selected" data-char="kancil">
+            <canvas id="preview-kancil" class="char-preview" width="140" height="140"></canvas>
+            <h3 class="char-name">Kancil Cerdik</h3>
+            <div class="char-perk">⚡ Lari & Lompatan Super Gesit</div>
+            <p class="char-desc">Pahlawan hutan berikat kepala merah & jubah kuning. Ahli menghindari serangan droplet dan berpikir cepat!</p>
+          </div>
+
+          <div class="char-card" data-char="raka">
+            <canvas id="preview-raka" class="char-preview" width="140" height="140"></canvas>
+            <h3 class="char-name">Raka Pahlawan Muda</h3>
+            <div class="char-perk">🛡️ Perisai Sanitasi +20 HP Awal</div>
+            <p class="char-desc">Penjaga kota dengan perisai pelindung & semprotan disinfektan gelembung sabun anti-virus berselubung.</p>
+          </div>
+        </div>
+
+        <div style="font-size:0.85rem; color:#4A5568; margin-bottom:16px; font-weight:700;">
+          🎮 Kontrol: <strong>A / D</strong> atau <strong>Panah Kiri/Kanan</strong> untuk bergerak, <strong>W / Spasi / Panah Atas</strong> untuk melompat (atau tombol sentuh di layar HP).
+        </div>
+
+        <button id="btn-start-game" class="btn-3d btn-mint" style="font-size:1.2rem; padding:14px 36px;">
+          🚀 MULAI PETUALANGAN
+        </button>
+      </div>
+    </div>
+
+    <!-- Mini Encyclopedia / Study Modal -->
+    <div id="screen-guide" class="overlay-screen hidden">
+      <div class="modal-card" style="text-align:left;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+          <span class="badge-tag" style="margin:0;">📘 Buku Saku Pahlawan Sehat</span>
+          <button id="btn-close-guide" class="btn-3d btn-coral" style="padding:6px 14px; font-size:0.9rem;">Tutup ✖</button>
+        </div>
+        <h2 style="margin-bottom:10px;">Ringkasan Ilmu Mengenal Virus Corona</h2>
+        <div style="display:grid; gap:10px; font-size:0.9rem; line-height:1.45;">
+          <div style="background:#EDF2F7; padding:12px; border-radius:14px; border:2px solid var(--dark);">
+            <strong>1. Apa itu Virus Corona (SARS-CoV-2)?</strong><br>
+            Virus RNA untai tunggal berselubung dari keluarga <em>Coronaviridae</em>. Dinamakan "Corona" karena tonjolan protein berbentuk mahkota (<em>crown</em>). Rentan terhadap sabun & disinfektan.
+          </div>
+          <div style="background:#EDF2F7; padding:12px; border-radius:14px; border:2px solid var(--dark);">
+            <strong>2. Struktur Tubuh Virus Corona:</strong><br>
+            • <strong>Protein Spike (S):</strong> Tonjolan mahkota sebagai "kunci" pengikat reseptor <strong>ACE2</strong> pada sel inang manusia.<br>
+            • <strong>Protein Membran (M) & Envelope (E):</strong> Membentuk & memperkuat selubung luar virus.<br>
+            • <strong>Protein Nukleokapsid (N):</strong> Membungkus & melindungi materi genetik <strong>RNA rantai tunggal positif</strong>.
+          </div>
+          <div style="background:#EDF2F7; padding:12px; border-radius:14px; border:2px solid var(--dark);">
+            <strong>3. Gejala & Cara Penularan:</strong><br>
+            • <strong>Gejala:</strong> Demam tinggi, batuk kering, kelelahan, hilangnya penciuman (<em>anosmia</em>) & perasa (<em>ageusia</em>), hingga sesak napas/pneumonia.<br>
+            • <strong>Penularan:</strong> Percikan <em>droplet</em>/aerosol saat batuk/bersin/berbicara, kontak langsung, atau menyentuh benda terkontaminasi lalu menyentuh wajah.
+          </div>
+          <div style="background:#EDF2F7; padding:12px; border-radius:14px; border:2px solid var(--dark);">
+            <strong>4. Tahapan Siklus Litik Replikasi Virus:</strong><br>
+            <strong>Adsorpsi</strong> (menempel pada reseptor sel inang) ➔ <strong>Penetrasi</strong> (memasukkan materi genetik ke sitoplasma) ➔ <strong>Sintesis</strong> (mengambil alih mesin sel inang membuat komponen virus) ➔ <strong>Perakitan</strong> (merakit partikel virus baru) ➔ <strong>Lisis</strong> (enzim lisozim memecah sel inang & melepaskan virus baru).
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- End Game Screen (Win / Game Over) -->
+    <div id="screen-end" class="overlay-screen hidden">
+      <div class="modal-card">
+        <div id="end-badge" class="badge-tag">🏆 MISI SELESAI</div>
+        <h1 id="end-title" class="game-title">Kota Sehat Kembali Aman!</h1>
+        <canvas id="end-canvas" width="200" height="150" style="margin:0 auto 8px; display:block;"></canvas>
+        <p id="end-subtitle" class="game-subtitle"></p>
+
+        <div class="stats-row">
+          <div class="stat-box">
+            <div id="end-score" class="stat-val">0</div>
+            <div class="stat-lbl">SKOR AKHIR</div>
+          </div>
+          <div class="stat-box">
+            <div id="end-rank" class="stat-val" style="color:var(--mint); font-size:1.2rem;">Duta Sehat</div>
+            <div class="stat-lbl">GELAR PAHLAWAN</div>
+          </div>
+        </div>
+
+        <button id="btn-restart" class="btn-3d btn-sun" style="font-size:1.15rem; padding:14px 32px;">
+          🔄 MAIN LAGI
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    /**
+     * =========================================================================
+     * 1. WEB AUDIO API - PROCEDURAL SOUND ENGINE (NO EXTERNAL AUDIO FILES)
+     * =========================================================================
+     */
+    class SoundEngine {
+      constructor() {
+        this.ctx = null;
+        this.muted = false;
+      }
+
+      init() {
+        if (!this.ctx) {
+          const AudioContext = window.AudioContext || window.webkitAudioContext;
+          this.ctx = new AudioContext();
+        }
+        if (this.ctx.state === 'suspended') {
+          this.ctx.resume();
+        }
+      }
+
+      toggleMute() {
+        this.muted = !this.muted;
+        return this.muted;
+      }
+
+      playTone(freq, type, duration, vol = 0.15, slideFreq = null, delay = 0) {
+        if (this.muted) return;
+        this.init();
+        const now = this.ctx.currentTime + delay;
+        const osc = this.ctx.createOscillator();
+        const gain = this.ctx.createGain();
+        osc.type = type;
+        osc.frequency.setValueAtTime(freq, now);
+        if (slideFreq) {
+          osc.frequency.exponentialRampToValueAtTime(slideFreq, now + duration);
+        }
+        gain.gain.setValueAtTime(vol, now);
+        gain.gain.exponentialRampToValueAtTime(0.001, now + duration);
+        osc.connect(gain);
+        gain.connect(this.ctx.destination);
+        osc.start(now);
+        osc.stop(now + duration);
+      }
+
+      jump() {
+        this.playTone(260, 'sine', 0.22, 0.14, 560);
+      }
+
+      collect() {
+        this.playTone(587.33, 'triangle', 0.12, 0.16, null, 0);
+        this.playTone(880, 'triangle', 0.22, 0.16, null, 0.08);
+      }
+
+      hurt() {
+        this.playTone(210, 'sawtooth', 0.3, 0.18, 75);
+      }
+
+      shootBubble() {
+        this.playTone(340, 'sine', 0.25, 0.16, 780);
+        this.playTone(520, 'triangle', 0.2, 0.12, 920, 0.05);
+      }
+
+      correct() {
+        this.playTone(523.25, 'triangle', 0.14, 0.16, null, 0);
+        this.playTone(659.25, 'triangle', 0.14, 0.16, null, 0.1);
+        this.playTone(783.99, 'triangle', 0.28, 0.18, null, 0.2);
+      }
+
+      wrong() {
+        this.playTone(240, 'square', 0.18, 0.12, 160, 0);
+        this.playTone(170, 'sawtooth', 0.3, 0.14, 110, 0.14);
+      }
+
+      bossAppear() {
+        this.playTone(150, 'sawtooth', 0.35, 0.16, 95, 0);
+        this.playTone(130, 'sawtooth', 0.45, 0.16, 80, 0.25);
+      }
+
+      winFanfare() {
+        const notes = [523.25, 659.25, 783.99, 1046.5, 783.99, 1046.5];
+        const times = [0, 0.12, 0.24, 0.38, 0.55, 0.7];
+        notes.forEach((n, i) => {
+          this.playTone(n, 'triangle', 0.26, 0.18, null, times[i]);
+        });
+      }
+    }
+
+    const sfx = new SoundEngine();
+
+    /**
+     * =========================================================================
+     * 2. CURRICULUM CONTENT (BASED ON CORONAVIRUS & LYTIC CYCLE PRESENTATION)
+     * =========================================================================
+     */
+    const BOSS_STAGES = [
+      {
+        id: 1,
+        x: 1350,
+        locationName: "Halte Bus Ramai",
+        bossName: "Virus Droplet (SARS-CoV-2)",
+        bossColor: "#EF476F",
+        spikeColor: "#FFD166",
+        maxHp: 60,
+        intro: "Hihihi! Aku SARS-CoV-2! Aku melompat lewat percikan droplet dan aerosol saat orang batuk atau bersin tanpa masker di halte ini!",
+        questions: [
+          {
+            q: "Apa nama resmi virus penyebab penyakit COVID-19 yang memiliki tonjolan protein berbentuk mahkota (crown) di permukaannya?",
+            options: [
+              "SARS-CoV-2 dari keluarga Coronaviridae",
+              "Bakteriofag T4 pemakan bakteri",
+              "Influenza Tipe-B beruntai ganda",
+              "Plasmodium penyebab malaria"
+            ],
+            correct: 0,
+            fact: "Virus Corona memiliki nama resmi SARS-CoV-2 (Severe Acute Respiratory Syndrome Coronavirus 2), termasuk keluarga Coronaviridae dengan tonjolan menyerupai mahkota."
+          },
+          {
+            q: "Bagaimana cara utama Virus Corona menular di tempat ramai seperti halte bus?",
+            options: [
+              "Hanya melalui gigitan nyamuk di malam hari",
+              "Melalui percikan droplet atau aerosol saat batuk, bersin, berbicara, atau bernapas",
+              "Melalui cahaya matahari langsung",
+              "Hanya jika meminum air putih matang"
+            ],
+            correct: 1,
+            fact: "SARS-CoV-2 menular melalui droplet (percikan air liur) dan aerosol yang keluar dari saluran pernapasan orang terinfeksi, sehingga memakai masker sangat efektif mencegahnya!"
+          }
+        ]
+      },
+      {
+        id: 2,
+        x: 2750,
+        locationName: "Taman Bermain Kota",
+        bossName: "Virus Lengket Selubung",
+        bossColor: "#7209B7",
+        spikeColor: "#06D6A0",
+        maxHp: 60,
+        intro: "Mwahahaha! Aku menempel di ayunan dan gagang pintu taman! Sekali tangan menyentuhku lalu menyentuh wajah, aku akan masuk!",
+        questions: [
+          {
+            q: "Mengapa mencuci tangan pakai sabun dan disinfektan sangat ampuh melumpuhkan Virus Corona?",
+            options: [
+              "Karena virus memiliki kaki yang terpeleset busa",
+              "Karena virus Corona adalah virus RNA berselubung (envelope) yang rentan terhadap sabun & disinfektan",
+              "Karena sabun mengubah virus menjadi vitamin",
+              "Karena air dingin membekukan inti sel virus"
+            ],
+            correct: 1,
+            fact: "Virus Corona merupakan parasit intraseluler obligat berselubung (envelope) yang sangat rentan terhadap sabun dan disinfektan karena selubung lipid/proteinnya mudah rusak!"
+          },
+          {
+            q: "Penularan kontak tidak langsung terjadi ketika tangan menyentuh permukaan benda terkontaminasi lalu menyentuh area wajah tertentu, yaitu...",
+            options: [
+              "Rambut, dahi, dan telinga bagian luar",
+              "Mata, hidung, atau mulut",
+              "Dagu dan leher bagian belakang",
+              "Siku dan pergelangan tangan"
+            ],
+            correct: 1,
+            fact: "Partikel virus di benda publik masuk ke tubuh melalui selaput lendir di mata, hidung, atau mulut. Cuci tangan pakai sabun minimal 20 detik sebelum menyentuh wajah!"
+          }
+        ]
+      },
+      {
+        id: 3,
+        x: 4150,
+        locationName: "Kantin & Lab Sekolah",
+        bossName: "Kapten Protein Spike",
+        bossColor: "#F77F00",
+        spikeColor: "#EF476F",
+        maxHp: 90,
+        intro: "Grrr! Lihat mahkota Protein Spike milikku! Aku punya 'kunci' khusus untuk membobol sel paru-paru manusia!",
+        questions: [
+          {
+            q: "Bagian struktur Virus Corona yang berfungsi sebagai 'kunci' utama untuk mengenali dan mengikat reseptor khusus (ACE2) pada sel inang manusia adalah...",
+            options: [
+              "Protein Spike (Protein S)",
+              "Serabut ekor bakteriofag",
+              "Dinding sel selulosa",
+              "Enzim amilase"
+            ],
+            correct: 0,
+            fact: "Protein Spike (Protein S) adalah tonjolan glikoprotein berbentuk mahkota di permukaan luar virus yang mengikat reseptor ACE2 pada sel inang manusia."
+          },
+          {
+            q: "Apa jenis materi genetik inti yang dibungkus oleh Protein Nukleokapsid (Protein N) di dalam tubuh Virus Corona?",
+            options: [
+              "DNA rantai ganda melingkar",
+              "RNA rantai tunggal positif",
+              "Protein enzim lisozim saja",
+              "Kromosom diploid"
+            ],
+            correct: 1,
+            fact: "Materi genetik Virus Corona berupa rantai tunggal RNA positif yang dilindungi oleh Protein Nukleokapsid (Protein N), sedangkan selubung luarnya diperkuat Protein M dan E."
+          },
+          {
+            q: "Manakah yang termasuk gejala khas infeksi Virus Corona pada sistem pernapasan dan indra?",
+            options: [
+              "Demam tinggi, batuk kering, serta hilangnya penciuman (anosmia) dan perasa (ageusia)",
+              "Kuku berubah menjadi biru dan rambut memanjang",
+              "Penglihatan menjadi tembus pandang",
+              "Telinga berdengung tanpa demam atau gangguan napas"
+            ],
+            correct: 0,
+            fact: "Gejala umum infeksi SARS-CoV-2 meliputi demam tinggi, batuk kering, kelelahan, anosmia (hilang penciuman), dan ageusia (hilang perasa), hingga pneumonia pada kasus berat."
+          }
+        ]
+      },
+      {
+        id: 4,
+        x: 5550,
+        locationName: "Gerbang Kota Sehat (Final Boss)",
+        bossName: "Raja Litik Corona",
+        bossColor: "#9B2226",
+        spikeColor: "#FFD166",
+        maxHp: 90,
+        intro: "AKULAH RAJA LITIK CORONA! Aku akan membajak mesin sel inang, merakit ratusan pasukan baru, dan memecahkan sel dengan Lisis!",
+        questions: [
+          {
+            q: "Urutan tahapan Siklus Litik replikasi virus yang benar dari awal hingga akhir adalah...",
+            options: [
+              "Lisis ➔ Sintesis ➔ Adsorpsi ➔ Perakitan ➔ Penetrasi",
+              "Adsorpsi ➔ Penetrasi ➔ Sintesis ➔ Perakitan ➔ Lisis",
+              "Penetrasi ➔ Adsorpsi ➔ Lisis ➔ Sintesis ➔ Perakitan",
+              "Sintesis ➔ Perakitan ➔ Adsorpsi ➔ Penetrasi ➔ Lisis"
+            ],
+            correct: 1,
+            fact: "Siklus Litik berlangsung berurutan: 1. Adsorpsi (menempel), 2. Penetrasi (memasukkan materi genetik), 3. Sintesis (membajak sel inang), 4. Perakitan, 5. Lisis (sel pecah)."
+          },
+          {
+            q: "Pada tahap apakah materi genetik virus mengambil alih mesin sel inang untuk menyalin asam nukleat dan membentuk protein kapsid baru?",
+            options: [
+              "Tahap Adsorpsi",
+              "Tahap Sintesis",
+              "Tahap Lisis",
+              "Tahap Vaksinasi"
+            ],
+            correct: 1,
+            fact: "Pada tahap Sintesis, materi genetik virus mengambil alih kendali mesin metabolisme sel inang untuk menggandakan materi genetik dan menyintesis komponen protein virus."
+          },
+          {
+            q: "Apa yang terjadi pada tahap akhir Siklus Litik (Lisis) setelah ratusan partikel virus baru selesai dirakit?",
+            options: [
+              "Virus tidur selamanya di dalam sel tanpa merusaknya",
+              "Virus menghasilkan enzim lisozim untuk memecah sel inang sehingga virus-virus baru bebas menginfeksi sel lain",
+              "Sel inang membelah menjadi dua sel sehat",
+              "Virus berubah menjadi antibodi pelindung tubuh"
+            ],
+            correct: 1,
+            fact: "Pada tahap Lisis, enzim lisozim merusak dinding/membran sel inang hingga pecah (lisis), melepaskan ratusan virus baru. Vaksinasi & hidup bersih melatih imun kita menghentikannya!"
+          }
+        ]
+      }
+    ];
+
+    /**
+     * =========================================================================
+     * 3. GAME STATE & WORLD CONFIGURATION
+     * =========================================================================
+     */
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+
+    let width = window.innerWidth;
+    let height = window.innerHeight;
+    let groundY = height - 110;
+
+    const WORLD_LENGTH = 6050;
+    const GRAVITY = 0.68;
+
+    const state = {
+      mode: 'MENU', // MENU, EXPLORE, BATTLE, WIN, GAMEOVER
+      selectedChar: 'kancil',
+      score: 0,
+      cameraX: 0,
+      cameraZoom: 1,
+      shakeTimer: 0,
+      shakeIntensity: 0,
+      currentStageIdx: 0,
+      activeBoss: null,
+      battleQuestionIdx: 0,
+      typewriterTimer: null,
+      floatingTexts: [],
+      particles: [],
+      projectiles: [],
+      confetti: [],
+      items: [],
+      minions: [],
+      platforms: [],
+      landmarks: []
+    };
+
+    const player = {
+      x: 140,
+      y: 0,
+      vx: 0,
+      vy: 0,
+      width: 54,
+      height: 68,
+      speed: 5.5,
+      jumpPower: -14.2,
+      grounded: false,
+      facing: 1,
+      hp: 100,
+      maxHp: 100,
+      shieldTimer: 0,
+      invulnTimer: 0,
+      walkFrame: 0,
+      attackAnim: 0
+    };
+
+    const keys = {
+      left: false,
+      right: false,
+      up: false
+    };
+
+    /**
+     * =========================================================================
+     * 4. PROCEDURAL VECTOR ART RENDERERS (CHARACTERS, VIRUSES, WORLD)
+     * =========================================================================
+     */
+    function drawHeroCharacter(c, type, x, y, facing, walkFrame, hasShield, attackAnim, isHappy = false) {
+      c.save();
+      c.translate(x, y);
+      c.scale(facing, 1);
+
+      const bob = Math.sin(walkFrame * 0.25) * 3.5;
+      const legSwing = Math.sin(walkFrame * 0.25) * 9;
+
+      // Shadow
+      c.fillStyle = 'rgba(29, 53, 87, 0.22)';
+      c.beginPath();
+      c.ellipse(0, 34, 24, 7, 0, 0, Math.PI * 2);
+      c.fill();
+
+      if (type === 'kancil') {
+        // Flowing Hero Cape
+        c.fillStyle = '#FFD166';
+        c.strokeStyle = '#1D3557';
+        c.lineWidth = 3;
+        c.beginPath();
+        c.moveTo(-8, -4 + bob);
+        c.quadraticCurveTo(-34, 4 + bob * 1.5, -38 - Math.sin(walkFrame * 0.3) * 5, 22);
+        c.lineTo(-10, 18 + bob);
+        c.closePath();
+        c.fill();
+        c.stroke();
+
+        // Legs
+        c.fillStyle = '#E09F3E';
+        c.beginPath();
+        c.roundRect(-12 + legSwing * 0.6, 16, 10, 18, 5);
+        c.roundRect(2 - legSwing * 0.6, 16, 10, 18, 5);
+        c.fill();
+        c.stroke();
+
+        // Body
+        c.fillStyle = '#06D6A0';
+        c.beginPath();
+        c.roundRect(-16, -6 + bob, 32, 26, 12);
+        c.fill();
+        c.stroke();
+
+        // Head (Cute Deer/Kancil)
+        c.fillStyle = '#F4A261';
+        c.beginPath();
+        c.arc(2, -20 + bob, 20, 0, Math.PI * 2);
+        c.fill();
+        c.stroke();
+
+        // Ears
+        c.fillStyle = '#F4A261';
+        c.beginPath();
+        c.ellipse(-10, -40 + bob, 6, 13, -0.35, 0, Math.PI * 2);
+        c.ellipse(8, -41 + bob, 6, 13, 0.25, 0, Math.PI * 2);
+        c.fill();
+        c.stroke();
+
+        // Red Hero Headband
+        c.fillStyle = '#EF476F';
+        c.beginPath();
+        c.roundRect(-18, -28 + bob, 40, 8, 4);
+        c.fill();
+        c.stroke();
+        // Headband tails
+        c.beginPath();
+        c.moveTo(-18, -24 + bob);
+        c.lineTo(-32, -29 + bob);
+        c.lineTo(-29, -20 + bob);
+        c.closePath();
+        c.fill();
+        c.stroke();
+
+        // Eyes & Cute Nose
+        c.fillStyle = '#1D3557';
+        if (isHappy) {
+          c.lineWidth = 3;
+          c.beginPath();
+          c.arc(10, -18 + bob, 4, Math.PI, 0);
+          c.stroke();
+        } else {
+          c.beginPath();
+          c.arc(10, -18 + bob, 3.5, 0, Math.PI * 2);
+          c.fill();
+          c.fillStyle = '#FFFFFF';
+          c.beginPath();
+          c.arc(11, -19 + bob, 1.3, 0, Math.PI * 2);
+          c.fill();
+        }
+        // Nose
+        c.fillStyle = '#1D3557';
+        c.beginPath();
+        c.arc(21, -15 + bob, 3.5, 0, Math.PI * 2);
+        c.fill();
+
+        // Arm / Soap Blaster
+        c.fillStyle = '#F4A261';
+        c.beginPath();
+        c.roundRect(4, -2 + bob - attackAnim * 6, 18, 9, 5);
+        c.fill();
+        c.stroke();
+      } else {
+        // RAKA (Young Hero with Shield & Disinfectant Sprayer)
+        // Legs
+        c.fillStyle = '#1D3557';
+        c.beginPath();
+        c.roundRect(-12 + legSwing * 0.6, 16, 10, 18, 5);
+        c.roundRect(2 - legSwing * 0.6, 16, 10, 18, 5);
+        c.fill();
+
+        // Torso
+        c.fillStyle = '#4CC9F0';
+        c.strokeStyle = '#1D3557';
+        c.lineWidth = 3;
+        c.beginPath();
+        c.roundRect(-17, -7 + bob, 34, 27, 11);
+        c.fill();
+        c.stroke();
+
+        // Cross Health Emblem on Chest
+        c.fillStyle = '#FFFFFF';
+        c.fillRect(-3, 0 + bob, 6, 14);
+        c.fillRect(-7, 4 + bob, 14, 6);
+
+        // Head
+        c.fillStyle = '#FFCCB6';
+        c.beginPath();
+        c.arc(0, -21 + bob, 19, 0, Math.PI * 2);
+        c.fill();
+        c.stroke();
+
+        // Spiky Hero Hair
+        c.fillStyle = '#1D3557';
+        c.beginPath();
+        c.arc(0, -24 + bob, 19, Math.PI, Math.PI * 2);
+        c.lineTo(18, -32 + bob);
+        c.lineTo(8, -39 + bob);
+        c.lineTo(0, -34 + bob);
+        c.lineTo(-10, -40 + bob);
+        c.lineTo(-19, -25 + bob);
+        c.closePath();
+        c.fill();
+
+        // Mask on Chin/Mouth (Heroic Mask!)
+        c.fillStyle = '#06D6A0';
+        c.beginPath();
+        c.roundRect(-11, -16 + bob, 26, 11, 5);
+        c.fill();
+        c.stroke();
+
+        // Eyes
+        c.fillStyle = '#1D3557';
+        c.beginPath();
+        c.arc(9, -21 + bob, 3.3, 0, Math.PI * 2);
+        c.fill();
+        c.fillStyle = '#FFFFFF';
+        c.beginPath();
+        c.arc(10, -22 + bob, 1.2, 0, Math.PI * 2);
+        c.fill();
+
+        // Sanitizing Shield
+        c.fillStyle = '#FFD166';
+        c.beginPath();
+        c.arc(16 + attackAnim * 6, 4 + bob, 14, -Math.PI * 0.45, Math.PI * 0.45);
+        c.closePath();
+        c.fill();
+        c.stroke();
+      }
+
+      // Active Bubble Shield Aura
+      if (hasShield) {
+        c.strokeStyle = '#06D6A0';
+        c.fillStyle = 'rgba(6, 214, 160, 0.18)';
+        c.lineWidth = 3;
+        c.beginPath();
+        c.arc(0, -4, 44 + Math.sin(Date.now() * 0.01) * 2, 0, Math.PI * 2);
+        c.fill();
+        c.stroke();
+      }
+
+      c.restore();
+    }
+
+    function drawVirus(c, x, y, radius, bodyColor, spikeColor, time, isBoss = false) {
+      c.save();
+      c.translate(x, y);
+
+      const pulse = 1 + Math.sin(time * 0.006) * 0.05;
+      c.scale(pulse, pulse);
+
+      // Crown Spikes (Protein Spike S)
+      const spikeCount = isBoss ? 14 : 10;
+      c.strokeStyle = '#1D3557';
+      c.lineWidth = isBoss ? 3.5 : 2.5;
+
+      for (let i = 0; i < spikeCount; i++) {
+        const angle = (i / spikeCount) * Math.PI * 2 + time * 0.0012;
+        const innerR = radius * 0.85;
+        const outerR = radius * (isBoss ? 1.42 : 1.38);
+        const sx = Math.cos(angle) * innerR;
+        const sy = Math.sin(angle) * innerR;
+        const ex = Math.cos(angle) * outerR;
+        const ey = Math.sin(angle) * outerR;
+
+        c.beginPath();
+        c.moveTo(sx, sy);
+        c.lineTo(ex, ey);
+        c.stroke();
+
+        // Crown knob at tip
+        c.fillStyle = spikeColor;
+        c.beginPath();
+        c.arc(ex, ey, isBoss ? 7 : 4.5, 0, Math.PI * 2);
+        c.fill();
+        c.stroke();
+      }
+
+      // Main Envelope Sphere
+      c.fillStyle = bodyColor;
+      c.beginPath();
+      c.arc(0, 0, radius, 0, Math.PI * 2);
+      c.fill();
+      c.stroke();
+
+      // Inner Spots
+      c.fillStyle = 'rgba(255, 255, 255, 0.2)';
+      c.beginPath();
+      c.arc(-radius * 0.35, -radius * 0.3, radius * 0.25, 0, Math.PI * 2);
+      c.arc(radius * 0.4, radius * 0.25, radius * 0.18, 0, Math.PI * 2);
+      c.fill();
+
+      // Mischievous Cartoon Eyes
+      const eyeOffsetX = radius * 0.32;
+      const eyeOffsetY = -radius * 0.1;
+      const eyeR = radius * 0.24;
+
+      c.fillStyle = '#FFFFFF';
+      c.beginPath();
+      c.arc(-eyeOffsetX, eyeOffsetY, eyeR, 0, Math.PI * 2);
+      c.arc(eyeOffsetX, eyeOffsetY, eyeR, 0, Math.PI * 2);
+      c.fill();
+      c.stroke();
+
+      // Pupils
+      c.fillStyle = '#1D3557';
+      c.beginPath();
+      c.arc(-eyeOffsetX - 2, eyeOffsetY, eyeR * 0.48, 0, Math.PI * 2);
+      c.arc(eyeOffsetX - 2, eyeOffsetY, eyeR * 0.48, 0, Math.PI * 2);
+      c.fill();
+
+      // Angry Eyebrows
+      c.lineWidth = isBoss ? 4 : 2.5;
+      c.beginPath();
+      c.moveTo(-eyeOffsetX - eyeR, eyeOffsetY - eyeR * 1.1);
+      c.lineTo(-eyeOffsetX + eyeR * 0.7, eyeOffsetY - eyeR * 0.5);
+      c.moveTo(eyeOffsetX + eyeR, eyeOffsetY - eyeR * 1.1);
+      c.lineTo(eyeOffsetX - eyeR * 0.7, eyeOffsetY - eyeR * 0.5);
+      c.stroke();
+
+      // Grin Mouth
+      c.fillStyle = '#1D3557';
+      c.beginPath();
+      c.arc(0, radius * 0.26, radius * 0.35, 0, Math.PI);
+      c.fill();
+
+      // Little fangs
+      c.fillStyle = '#FFFFFF';
+      c.beginPath();
+      c.moveTo(-radius * 0.2, radius * 0.26);
+      c.lineTo(-radius * 0.12, radius * 0.42);
+      c.lineTo(-radius * 0.04, radius * 0.26);
+      c.moveTo(radius * 0.04, radius * 0.26);
+      c.lineTo(radius * 0.12, radius * 0.42);
+      c.lineTo(radius * 0.2, radius * 0.26);
+      c.fill();
+
+      // Boss Crown Accessory
+      if (isBoss) {
+        c.fillStyle = '#FFD166';
+        c.strokeStyle = '#1D3557';
+        c.lineWidth = 3;
+        c.beginPath();
+        c.moveTo(-22, -radius - 6);
+        c.lineTo(-26, -radius - 28);
+        c.lineTo(-10, -radius - 16);
+        c.lineTo(0, -radius - 32);
+        c.lineTo(10, -radius - 16);
+        c.lineTo(26, -radius - 28);
+        c.lineTo(22, -radius - 6);
+        c.closePath();
+        c.fill();
+        c.stroke();
+      }
+
+      c.restore();
+    }
+
+    function drawCollectibleItem(c, item, time) {
+      const floatY = item.y + Math.sin(time * 0.005 + item.x) * 6;
+      c.save();
+      c.translate(item.x, floatY);
+
+      // Glow circle
+      c.fillStyle = 'rgba(255, 255, 255, 0.55)';
+      c.beginPath();
+      c.arc(0, 0, 22, 0, Math.PI * 2);
+      c.fill();
+
+      c.strokeStyle = '#1D3557';
+      c.lineWidth = 2.5;
+
+      if (item.type === 'mask') {
+        // Medical Mask
+        c.fillStyle = '#4CC9F0';
+        c.beginPath();
+        c.roundRect(-14, -9, 28, 18, 5);
+        c.fill();
+        c.stroke();
+        c.beginPath();
+        c.arc(-14, 0, 5, Math.PI * 0.5, Math.PI * 1.5);
+        c.arc(14, 0, 5, -Math.PI * 0.5, Math.PI * 0.5);
+        c.stroke();
+      } else if (item.type === 'soap') {
+        // Hand Soap Bottle
+        c.fillStyle = '#06D6A0';
+        c.beginPath();
+        c.roundRect(-10, -6, 20, 20, 6);
+        c.fill();
+        c.stroke();
+        c.fillStyle = '#FFD166';
+        c.fillRect(-4, -12, 8, 6);
+        c.strokeRect(-4, -12, 8, 6);
+        c.beginPath();
+        c.moveTo(0, -12);
+        c.lineTo(8, -15);
+        c.stroke();
+      } else {
+        // Vitamin C Star/Pill
+        c.fillStyle = '#FFD166';
+        c.beginPath();
+        c.arc(0, 0, 14, 0, Math.PI * 2);
+        c.fill();
+        c.stroke();
+        c.fillStyle = '#EF476F';
+        c.font = 'bold 13px Fredoka';
+        c.textAlign = 'center';
+        c.textBaseline = 'middle';
+        c.fillText('C+', 0, 1);
+      }
+
+      c.restore();
+    }
+
+    /**
+     * =========================================================================
+     * 5. WORLD GENERATION & LEVEL DESIGN
+     * =========================================================================
+     */
+    function buildWorld() {
+      state.platforms = [
+        // Segment 1: City Park to Bus Stop
+        { x: 340, y: groundY - 95, w: 150, h: 22 },
+        { x: 560, y: groundY - 165, w: 160, h: 22 },
+        { x: 820, y: groundY - 105, w: 170, h: 22 },
+        // Segment 2: Playground
+        { x: 1750, y: groundY - 100, w: 160, h: 22 },
+        { x: 2010, y: groundY - 175, w: 180, h: 22 },
+        { x: 2300, y: groundY - 110, w: 160, h: 22 },
+        // Segment 3: School Canteen & Lab
+        { x: 3150, y: groundY - 105, w: 170, h: 22 },
+        { x: 3420, y: groundY - 175, w: 180, h: 22 },
+        { x: 3710, y: groundY - 115, w: 160, h: 22 },
+        // Segment 4: Healthy City Gate
+        { x: 4550, y: groundY - 110, w: 170, h: 22 },
+        { x: 4840, y: groundY - 180, w: 190, h: 22 },
+        { x: 5140, y: groundY - 115, w: 160, h: 22 }
+      ];
+
+      state.items = [];
+      const itemTypes = ['mask', 'soap', 'vitamin'];
+      // Place items on ground and platforms
+      state.platforms.forEach((p, idx) => {
+        state.items.push({
+          x: p.x + p.w / 2,
+          y: p.y - 30,
+          type: itemTypes[idx % 3],
+          collected: false
+        });
+      });
+
+      [480, 1060, 1900, 2520, 3300, 3920, 4700, 5330].forEach((ix, idx) => {
+        state.items.push({
+          x: ix,
+          y: groundY - 32,
+          type: itemTypes[(idx + 1) % 3],
+          collected: false
+        });
+      });
+
+      // Patrolling Virus Minions
+      state.minions = [
+        { x: 640, minX: 520, maxX: 780, vx: 1.8, radius: 22, alive: true },
+        { x: 1020, minX: 900, maxX: 1160, vx: -2.0, radius: 22, alive: true },
+        { x: 1920, minX: 1760, maxX: 2120, vx: 2.2, radius: 23, alive: true },
+        { x: 2450, minX: 2300, maxX: 2580, vx: -2.1, radius: 23, alive: true },
+        { x: 3320, minX: 3150, maxX: 3520, vx: 2.4, radius: 24, alive: true },
+        { x: 3860, minX: 3700, maxX: 3980, vx: -2.5, radius: 24, alive: true },
+        { x: 4720, minX: 4540, maxX: 4940, vx: 2.6, radius: 25, alive: true },
+        { x: 5240, minX: 5080, maxX: 5380, vx: -2.7, radius: 25, alive: true }
+      ];
+
+      // Landmarks along the route
+      state.landmarks = [
+        { x: 140, label: "START: TAMAN SEHAT", color: "#06D6A0" },
+        { x: 1350, label: "POS 1: HALTE BUS RAMAI", color: "#EF476F" },
+        { x: 2750, label: "POS 2: TAMAN BERMAIN", color: "#7209B7" },
+        { x: 4150, label: "POS 3: KANTIN & LAB SEKOLAH", color: "#F77F00" },
+        { x: 5550, label: "POS 4: GERBANG KOTA SEHAT", color: "#9B2226" }
+      ];
+    }
+
+    function resetGame() {
+      state.mode = 'EXPLORE';
+      state.score = 0;
+      state.cameraX = 0;
+      state.cameraZoom = 1;
+      state.shakeTimer = 0;
+      state.currentStageIdx = 0;
+      state.activeBoss = null;
+      state.battleQuestionIdx = 0;
+      state.floatingTexts = [];
+      state.particles = [];
+      state.projectiles = [];
+      state.confetti = [];
+
+      player.x = 140;
+      player.y = groundY - 34;
+      player.vx = 0;
+      player.vy = 0;
+      player.facing = 1;
+      player.invulnTimer = 0;
+
+      if (state.selectedChar === 'kancil') {
+        player.speed = 6.2;
+        player.jumpPower = -15.0;
+        player.maxHp = 100;
+        player.hp = 100;
+        player.shieldTimer = 0;
+      } else {
+        player.speed = 5.3;
+        player.jumpPower = -14.2;
+        player.maxHp = 120;
+        player.hp = 120;
+        player.shieldTimer = 360; // 6 seconds initial shield
+      }
+
+      buildWorld();
+      updateHUD();
+    }
+
+    /**
+     * =========================================================================
+     * 6. PARTICLES, FLOATING TEXT & VISUAL JUICE
+     * =========================================================================
+     */
+    function spawnParticles(x, y, colors, count = 16) {
+      for (let i = 0; i < count; i++) {
+        const angle = Math.random() * Math.PI * 2;
+        const speed = 2 + Math.random() * 5.5;
+        state.particles.push({
+          x,
+          y,
+          vx: Math.cos(angle) * speed,
+          vy: Math.sin(angle) * speed - 2,
+          radius: 4 + Math.random() * 5,
+          color: colors[Math.floor(Math.random() * colors.length)],
+          life: 1.0
+        });
+      }
+    }
+
+    function spawnFloatingText(x, y, text, color = '#1D3557') {
+      state.floatingTexts.push({
+        x,
+        y,
+        text,
+        color,
+        life: 1.0
+      });
+    }
+
+    function triggerScreenShake(intensity = 10, duration = 18) {
+      state.shakeIntensity = intensity;
+      state.shakeTimer = duration;
+    }
+
+    /**
+     * =========================================================================
+     * 7. BATTLE SYSTEM (TURN-BASED EDUCATIONAL ACTION ARENA)
+     * =========================================================================
+     */
+    const battleUI = document.getElementById('battle-ui');
+    const battleDialogue = document.getElementById('battle-dialogue');
+    const battleQuizArea = document.getElementById('battle-quiz-area');
+    const battleQuestion = document.getElementById('battle-question');
+    const battleOptions = document.getElementById('battle-options');
+    const battleFeedback = document.getElementById('battle-feedback');
+    const feedbackTitle = document.getElementById('feedback-title');
+    const feedbackText = document.getElementById('feedback-text');
+    const btnBattleNext = document.getElementById('btn-battle-next');
+
+    function typeDialogue(text, callback) {
+      if (state.typewriterTimer) clearInterval(state.typewriterTimer);
+      battleDialogue.textContent = '';
+      let idx = 0;
+      state.typewriterTimer = setInterval(() => {
+        battleDialogue.textContent += text.charAt(idx);
+        idx++;
+        if (idx >= text.length) {
+          clearInterval(state.typewriterTimer);
+          state.typewriterTimer = null;
+          if (callback) callback();
+        }
+      }, 18);
+    }
+
+    function startBossBattle(stageIndex) {
+      const stageData = BOSS_STAGES[stageIndex];
+      state.mode = 'BATTLE';
+      state.battleQuestionIdx = 0;
+      player.vx = 0;
+
+      state.activeBoss = {
+        ...stageData,
+        hp: stageData.maxHp,
+        x: stageData.x + 170,
+        y: groundY - 72,
+        hitAnim: 0
+      };
+
+      sfx.bossAppear();
+      triggerScreenShake(12, 22);
+
+      // Update Boss HUD
+      document.getElementById('boss-name-label').textContent = `👾 ${stageData.bossName}`;
+      updateBossHPBar();
+
+      battleUI.classList.remove('hidden');
+      battleQuizArea.classList.add('hidden');
+      battleFeedback.classList.add('hidden');
+
+      typeDialogue(stageData.intro, () => {
+        setTimeout(() => {
+          if (state.mode === 'BATTLE') renderBattleQuestion();
+        }, 450);
+      });
+    }
+
+    function updateBossHPBar() {
+      if (!state.activeBoss) return;
+      const pct = Math.max(0, (state.activeBoss.hp / state.activeBoss.maxHp) * 100);
+      document.getElementById('boss-hp-fill').style.width = `${pct}%`;
+      document.getElementById('boss-hp-label').textContent = `HP: ${Math.max(0, state.activeBoss.hp)}/${state.activeBoss.maxHp}`;
+    }
+
+    function renderBattleQuestion() {
+      const boss = state.activeBoss;
+      const qObj = boss.questions[state.battleQuestionIdx % boss.questions.length];
+
+      battleFeedback.classList.add('hidden');
+      battleQuizArea.classList.remove('hidden');
+      battleQuestion.textContent = `⚡ Tantangan ${state.battleQuestionIdx + 1}: ${qObj.q}`;
+      battleOptions.innerHTML = '';
+
+      const letters = ['A', 'B', 'C', 'D'];
+      qObj.options.forEach((optText, index) => {
+        const btn = document.createElement('button');
+        btn.className = 'option-btn';
+        btn.innerHTML = `<span class="option-letter">${letters[index]}</span><span>${optText}</span>`;
+        btn.onclick = () => handleBattleAnswer(index, qObj);
+        battleOptions.appendChild(btn);
+      });
+    }
+
+    function handleBattleAnswer(selectedIdx, qObj) {
+      // Disable all buttons
+      const allBtns = battleOptions.querySelectorAll('button');
+      allBtns.forEach((b, i) => {
+        b.disabled = true;
+        if (i === qObj.correct) {
+          b.style.background = '#D3F9D8';
+          b.style.borderColor = '#049A73';
+        } else if (i === selectedIdx) {
+          b.style.background = '#FFE3E3';
+          b.style.borderColor = '#EF476F';
+        }
+      });
+
+      const boss = state.activeBoss;
+      const isCorrect = selectedIdx === qObj.correct;
+
+      if (isCorrect) {
+        sfx.shootBubble();
+        player.attackAnim = 1.0;
+
+        // Launch Hero Soap/Vitamin Projectile toward Boss
+        state.projectiles.push({
+          x: player.x + 25,
+          y: player.y - 10,
+          targetX: boss.x,
+          targetY: boss.y,
+          color: state.selectedChar === 'kancil' ? '#FFD166' : '#06D6A0',
+          isHeroAttack: true,
+          onHit: () => {
+            sfx.correct();
+            boss.hp -= 30;
+            boss.hitAnim = 1.0;
+            state.score += 250;
+            updateBossHPBar();
+            updateHUD();
+            triggerScreenShake(12, 18);
+            spawnParticles(boss.x, boss.y, ['#06D6A0', '#FFD166', '#4CC9F0', '#FFFFFF'], 28);
+            spawnFloatingText(boss.x, boss.y - 50, '-30 HP!', '#06D6A0');
+          }
+        });
+
+        feedbackTitle.textContent = "🎯 JURUS SEHAT TEPAT SASARAN!";
+        battleFeedback.classList.remove('wrong');
+        feedbackText.textContent = qObj.fact;
+      } else {
+        sfx.wrong();
+        // Boss fires droplet projectile back at hero
+        state.projectiles.push({
+          x: boss.x - 30,
+          y: boss.y,
+          targetX: player.x,
+          targetY: player.y - 10,
+          color: '#EF476F',
+          isHeroAttack: false,
+          onHit: () => {
+            sfx.hurt();
+            const dmg = player.shieldTimer > 0 ? 10 : 22;
+            player.hp = Math.max(0, player.hp - dmg);
+            updateHUD();
+            triggerScreenShake(14, 20);
+            spawnParticles(player.x, player.y, ['#EF476F', '#7209B7'], 20);
+            spawnFloatingText(player.x, player.y - 45, `-${dmg} ENERGI!`, '#EF476F');
+          }
+        });
+
+        feedbackTitle.textContent = "💥 UPSS! SERANGAN VIRUS MENGENAIMU!";
+        battleFeedback.classList.add('wrong');
+        feedbackText.textContent = `Pelajari fakta ini: ${qObj.fact}`;
+      }
+
+      setTimeout(() => {
+        battleQuizArea.classList.add('hidden');
+        battleFeedback.classList.remove('hidden');
+
+        if (player.hp <= 0) {
+          btnBattleNext.textContent = "Lihat Kondisi Pahlawan 🍵";
+        } else if (boss.hp <= 0) {
+          btnBattleNext.textContent = "Kalahkan Boss & Lanjutkan! 🎉";
+        } else {
+          btnBattleNext.textContent = "Serangan Berikutnya ⚡";
+        }
+      }, 650);
+    }
+
+    btnBattleNext.onclick = () => {
+      if (player.hp <= 0) {
+        battleUI.classList.add('hidden');
+        endGame(false);
+        return;
+      }
+
+      const boss = state.activeBoss;
+      if (boss.hp <= 0) {
+        // Boss Defeated!
+        sfx.winFanfare();
+        spawnParticles(boss.x, boss.y, ['#FFD166', '#06D6A0', '#EF476F', '#4CC9F0'], 45);
+        spawnFloatingText(boss.x, boss.y - 40, `${boss.bossName} KALAH! +500`, '#FFD166');
+        state.score += 500;
+        player.hp = Math.min(player.maxHp, player.hp + 25); // Heal reward
+        state.currentStageIdx++;
+        state.activeBoss = null;
+        battleUI.classList.add('hidden');
+        updateHUD();
+
+        if (state.currentStageIdx >= BOSS_STAGES.length) {
+          endGame(true);
+        } else {
+          state.mode = 'EXPLORE';
+        }
+      } else {
+        state.battleQuestionIdx++;
+        renderBattleQuestion();
+      }
+    };
+
+    /**
+     * =========================================================================
+     * 8. HUD & SCREEN MANAGEMENT
+     * =========================================================================
+     */
+    function updateHUD() {
+      const hpPct = Math.max(0, (player.hp / player.maxHp) * 100);
+      document.getElementById('hud-hp-fill').style.width = `${hpPct}%`;
+      document.getElementById('hud-hp-text').textContent = `${player.hp}/${player.maxHp}`;
+      document.getElementById('hud-score').textContent = state.score;
+      document.getElementById('hud-hero-icon').textContent = state.selectedChar === 'kancil' ? '🦌' : '🦸';
+
+      const stageNum = Math.min(state.currentStageIdx + 1, BOSS_STAGES.length);
+      document.getElementById('hud-stage-pill').textContent = `📍 Pos ${stageNum} / ${BOSS_STAGES.length}`;
+
+      const shieldBadge = document.getElementById('hud-shield');
+      if (player.shieldTimer > 0) {
+        shieldBadge.classList.add('active');
+        shieldBadge.textContent = `🛡️ PERISAI (${Math.ceil(player.shieldTimer / 60)}d)`;
+      } else {
+        shieldBadge.classList.remove('active');
+      }
+    }
+
+    function endGame(isWin) {
+      state.mode = isWin ? 'WIN' : 'GAMEOVER';
+      document.getElementById('hud').classList.add('hidden');
+      document.getElementById('touch-controls').classList.add('hidden');
+
+      const screenEnd = document.getElementById('screen-end');
+      const endBadge = document.getElementById('end-badge');
+      const endTitle = document.getElementById('end-title');
+      const endSub = document.getElementById('end-subtitle');
+      const endScore = document.getElementById('end-score');
+      const endRank = document.getElementById('end-rank');
+
+      endScore.textContent = state.score;
+
+      if (isWin) {
+        sfx.winFanfare();
+        endBadge.textContent = "🏆 KEMENANGAN GEMILANG!";
+        endBadge.style.background = "#06D6A0";
+        endTitle.textContent = "Kota Sehat Bebas dari Pasukan Virus!";
+        endSub.textContent = "Luar biasa! Kamu berhasil menguasai seluruh materi SARS-CoV-2, struktur Protein Spike, cara pencegahan penularan, hingga mematahkan Siklus Litik virus!";
+        endRank.textContent = state.score >= 3000 ? "Duta Kesehatan Utama" : "Pahlawan Anti-Virus";
+
+        // Spawn confetti in background canvas
+        for (let i = 0; i < 90; i++) {
+          state.confetti.push({
+            x: Math.random() * width,
+            y: Math.random() * -height,
+            w: 8 + Math.random() * 8,
+            h: 6 + Math.random() * 6,
+            vy: 2 + Math.random() * 3.5,
+            vx: (Math.random() - 0.5) * 2,
+            color: ['#FFD166', '#06D6A0', '#EF476F', '#4CC9F0', '#7209B7'][i % 5],
+            rot: Math.random() * Math.PI
+          });
+        }
+      } else {
+        endBadge.textContent = "🍵 WAKTU ISTIRAHAT SEJENAK";
+        endBadge.style.background = "#FFD166";
+        endTitle.textContent = "Energi Pahlawan Sedang Menurun!";
+        endSub.textContent = "Jangan menyerah! Minum air hangat, konsumsi vitamin, ingat selalu pakai masker, cuci tangan pakai sabun, dan pelajari Buku Saku Virus Corona sebelum bertarung lagi!";
+        endRank.textContent = "Pejuang Tangguh";
+      }
+
+      drawEndIllustration(isWin);
+      screenEnd.classList.remove('hidden');
+    }
+
+    function drawEndIllustration(isWin) {
+      const ec = document.getElementById('end-canvas').getContext('2d');
+      ec.clearRect(0, 0, 200, 150);
+      if (isWin) {
+        drawHeroCharacter(ec, state.selectedChar, 100, 95, 1, 0, true, 0, true);
+      } else {
+        drawHeroCharacter(ec, state.selectedChar, 85, 98, 1, 0, false, 0, false);
+        // Cute Warm Tea Cup
+        ec.fillStyle = '#FFFFFF';
+        ec.strokeStyle = '#1D3557';
+        ec.lineWidth = 3;
+        ec.beginPath();
+        ec.roundRect(122, 95, 28, 24, 6);
+        ec.fill();
+        ec.stroke();
+        ec.beginPath();
+        ec.arc(150, 106, 7, -Math.PI * 0.5, Math.PI * 0.5);
+        ec.stroke();
+        // Steam
+        ec.strokeStyle = '#4CC9F0';
+        ec.beginPath();
+        ec.moveTo(130, 88);
+        ec.quadraticCurveTo(126, 80, 132, 72);
+        ec.moveTo(140, 88);
+        ec.quadraticCurveTo(144, 80, 138, 72);
+        ec.stroke();
+      }
+    }
+
+    /**
+     * =========================================================================
+     * 9. MAIN PHYSICS & UPDATE LOOP
+     * =========================================================================
+     */
+    function update(time) {
+      // Update Particles
+      for (let i = state.particles.length - 1; i >= 0; i--) {
+        const p = state.particles[i];
+        p.x += p.vx;
+        p.y += p.vy;
+        p.vy += 0.15;
+        p.life -= 0.025;
+        if (p.life <= 0) state.particles.splice(i, 1);
+      }
+
+      // Update Floating Texts
+      for (let i = state.floatingTexts.length - 1; i >= 0; i--) {
+        const ft = state.floatingTexts[i];
+        ft.y -= 1.1;
+        ft.life -= 0.018;
+        if (ft.life <= 0) state.floatingTexts.splice(i, 1);
+      }
+
+      // Update Battle Projectiles
+      for (let i = state.projectiles.length - 1; i >= 0; i--) {
+        const pr = state.projectiles[i];
+        const dx = pr.targetX - pr.x;
+        const dy = pr.targetY - pr.y;
+        const dist = Math.hypot(dx, dy);
+        if (dist < 18) {
+          if (pr.onHit) pr.onHit();
+          state.projectiles.splice(i, 1);
+        } else {
+          pr.x += (dx / dist) * 14;
+          pr.y += (dy / dist) * 14;
+          spawnParticles(pr.x, pr.y, [pr.color, '#FFFFFF'], 1);
+        }
+      }
+
+      // Update Confetti on Win
+      if (state.mode === 'WIN') {
+        state.confetti.forEach(c => {
+          c.y += c.vy;
+          c.x += c.vx;
+          c.rot += 0.06;
+          if (c.y > height) c.y = -20;
+        });
+      }
+
+      if (state.shakeTimer > 0) state.shakeTimer--;
+      if (player.attackAnim > 0) player.attackAnim = Math.max(0, player.attackAnim - 0.06);
+
+      if (state.mode === 'BATTLE') {
+        // Smooth camera zoom into battle arena
+        const targetCamX = state.activeBoss.x - width * 0.65;
+        state.cameraX += (targetCamX - state.cameraX) * 0.08;
+        state.cameraZoom += (1.12 - state.cameraZoom) * 0.08;
+        if (state.activeBoss && state.activeBoss.hitAnim > 0) {
+          state.activeBoss.hitAnim = Math.max(0, state.activeBoss.hitAnim - 0.07);
+        }
+        return;
+      }
+
+      if (state.mode !== 'EXPLORE') return;
+
+      // Smooth reset zoom in explore mode
+      state.cameraZoom += (1.0 - state.cameraZoom) * 0.1;
+
+      // Shield & Invulnerability timers
+      if (player.shieldTimer > 0) {
+        player.shieldTimer--;
+        if (player.shieldTimer % 30 === 0) updateHUD();
+      }
+      if (player.invulnTimer > 0) player.invulnTimer--;
+
+      // Horizontal Movement
+      if (keys.left) {
+        player.vx = -player.speed;
+        player.facing = -1;
+        player.walkFrame++;
+      } else if (keys.right) {
+        player.vx = player.speed;
+        player.facing = 1;
+        player.walkFrame++;
+      } else {
+        player.vx *= 0.78;
+        if (Math.abs(player.vx) < 0.2) player.vx = 0;
+      }
+
+      // Jump
+      if (keys.up && player.grounded) {
+        player.vy = player.jumpPower;
+        player.grounded = false;
+        sfx.jump();
+        spawnParticles(player.x, player.y + 32, ['#FFFFFF', '#FFD166'], 6);
+      }
+
+      // Apply Velocity & Gravity
+      player.x += player.vx;
+      player.vy += GRAVITY;
+      const prevY = player.y;
+      player.y += player.vy;
+
+      // World Boundaries
+      if (player.x < 50) player.x = 50;
+      if (player.x > WORLD_LENGTH - 80) player.x = WORLD_LENGTH - 80;
+
+      // Ground Collision
+      player.grounded = false;
+      if (player.y >= groundY - 34) {
+        player.y = groundY - 34;
+        player.vy = 0;
+        player.grounded = true;
+      }
+
+      // One-way Platform Collision
+      if (player.vy >= 0) {
+        state.platforms.forEach(p => {
+          if (
+            player.x + 16 > p.x &&
+            player.x - 16 < p.x + p.w &&
+            prevY + 34 <= p.y + 8 &&
+            player.y + 34 >= p.y
+          ) {
+            player.y = p.y - 34;
+            player.vy = 0;
+            player.grounded = true;
+          }
+        });
+      }
+
+      // Collectible Items Collision
+      state.items.forEach(item => {
+        if (!item.collected && Math.hypot(player.x - item.x, player.y - item.y) < 42) {
+          item.collected = true;
+          sfx.collect();
+          state.score += 100;
+
+          if (item.type === 'mask') {
+            player.shieldTimer = 480; // 8 sec shield
+            spawnFloatingText(item.x, item.y - 20, '+100 PERISAI MASKER!', '#4CC9F0');
+          } else if (item.type === 'soap') {
+            player.shieldTimer = 480;
+            player.hp = Math.min(player.maxHp, player.hp + 15);
+            spawnFloatingText(item.x, item.y - 20, '+15 HP & SABUN!', '#06D6A0');
+          } else {
+            player.hp = Math.min(player.maxHp, player.hp + 20);
+            spawnFloatingText(item.x, item.y - 20, '+20 ENERGI VITAMIN C!', '#FFD166');
+          }
+
+          spawnParticles(item.x, item.y, ['#FFD166', '#06D6A0', '#4CC9F0'], 14);
+          updateHUD();
+        }
+      });
+
+      // Patrolling Minions Collision
+      state.minions.forEach(m => {
+        if (!m.alive) return;
+        m.x += m.vx;
+        if (m.x <= m.minX || m.x >= m.maxX) m.vx *= -1;
+
+        const dist = Math.hypot(player.x - m.x, player.y - (groundY - m.radius));
+        if (dist < m.radius + 24) {
+          // Stomp from above or destroy with shield!
+          if ((player.vy > 1 && player.y < groundY - m.radius - 10) || player.shieldTimer > 0) {
+            m.alive = false;
+            player.vy = -10;
+            state.score += 150;
+            sfx.correct();
+            spawnParticles(m.x, groundY - m.radius, ['#06D6A0', '#FFD166', '#EF476F'], 20);
+            spawnFloatingText(m.x, groundY - 50, 'VIRUS DIBERSIHKAN! +150', '#06D6A0');
+            updateHUD();
+          } else if (player.invulnTimer <= 0) {
+            // Knockback & Hurt
+            sfx.hurt();
+            player.hp = Math.max(0, player.hp - 15);
+            player.invulnTimer = 75;
+            player.vy = -9;
+            player.vx = player.x < m.x ? -8 : 8;
+            triggerScreenShake(10, 16);
+            spawnParticles(player.x, player.y, ['#EF476F'], 14);
+            spawnFloatingText(player.x, player.y - 35, '-15 ENERGI!', '#EF476F');
+            updateHUD();
+
+            if (player.hp <= 0) {
+              endGame(false);
+            }
+          }
+        }
+      });
+
+      // Check Boss Checkpoint Trigger
+      if (state.currentStageIdx < BOSS_STAGES.length) {
+        const nextStage = BOSS_STAGES[state.currentStageIdx];
+        if (player.x >= nextStage.x) {
+          player.x = nextStage.x;
+          startBossBattle(state.currentStageIdx);
+        }
+      }
+
+      // Smooth Camera Follow
+      const targetCam = Math.max(0, Math.min(WORLD_LENGTH - width, player.x - width * 0.32));
+      state.cameraX += (targetCam - state.cameraX) * 0.12;
+    }
+
+    /**
+     * =========================================================================
+     * 10. MAIN CANVAS RENDERING LOOP
+     * =========================================================================
+     */
+    function drawBackground(time) {
+      // Sky Gradient
+      const skyGrad = ctx.createLinearGradient(0, 0, 0, groundY);
+      skyGrad.addColorStop(0, '#4CC9F0');
+      skyGrad.addColorStop(1, '#BDE0FE');
+      ctx.fillStyle = skyGrad;
+      ctx.fillRect(0, 0, width, height);
+
+      // Sun
+      ctx.fillStyle = '#FFD166';
+      ctx.beginPath();
+      ctx.arc(width - 110, 95, 44 + Math.sin(time * 0.002) * 3, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Parallax Clouds
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.85)';
+      for (let i = 0; i < 14; i++) {
+        const cx = ((i * 520 - state.cameraX * 0.22) % (width + 400) + (width + 400)) % (width + 400) - 150;
+        const cy = 75 + (i % 3) * 45;
+        ctx.beginPath();
+        ctx.arc(cx, cy, 28, 0, Math.PI * 2);
+        ctx.arc(cx + 26, cy - 8, 34, 0, Math.PI * 2);
+        ctx.arc(cx + 55, cy, 26, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      // Parallax City Buildings
+      const buildingColors = ['#A2D2FF', '#CDB4DB', '#FFAFCC', '#90E0EF'];
+      for (let i = 0; i < 32; i++) {
+        const bx = i * 240 - state.cameraX * 0.45;
+        if (bx < -220 || bx > width + 220) continue;
+        const bh = 120 + ((i * 53) % 130);
+        const bw = 135;
+        ctx.fillStyle = buildingColors[i % buildingColors.length];
+        ctx.strokeStyle = 'rgba(29, 53, 87, 0.25)';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.roundRect(bx, groundY - bh, bw, bh, [14, 14, 0, 0]);
+        ctx.fill();
+        ctx.stroke();
+
+        // Windows
+        ctx.fillStyle = 'rgba(255, 253, 249, 0.65)';
+        for (let wy = groundY - bh + 20; wy < groundY - 25; wy += 32) {
+          ctx.fillRect(bx + 22, wy, 22, 18);
+          ctx.fillRect(bx + 60, wy, 22, 18);
+          ctx.fillRect(bx + 96, wy, 22, 18);
+        }
+      }
+    }
+
+    function drawWorld(time) {
+      ctx.save();
+
+      // Apply Camera Zoom & Screen Shake
+      let shakeX = 0, shakeY = 0;
+      if (state.shakeTimer > 0) {
+        shakeX = (Math.random() - 0.5) * state.shakeIntensity;
+        shakeY = (Math.random() - 0.5) * state.shakeIntensity;
+      }
+
+      ctx.translate(width / 2 + shakeX, height / 2 + shakeY);
+      ctx.scale(state.cameraZoom, state.cameraZoom);
+      ctx.translate(-width / 2 - state.cameraX, -height / 2);
+
+      // Decorative Trees & Bushes
+      for (let tx = 100; tx < WORLD_LENGTH; tx += 360) {
+        if (tx < state.cameraX - 150 || tx > state.cameraX + width + 150) continue;
+        // Trunk
+        ctx.fillStyle = '#8D5B4C';
+        ctx.fillRect(tx - 8, groundY - 58, 16, 58);
+        // Leaves
+        ctx.fillStyle = '#06D6A0';
+        ctx.strokeStyle = '#1D3557';
+        ctx.lineWidth = 2.5;
+        ctx.beginPath();
+        ctx.arc(tx, groundY - 72, 32, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+      }
+
+      // Ground Strip
+      ctx.fillStyle = '#06D6A0';
+      ctx.fillRect(0, groundY, WORLD_LENGTH, 26);
+      ctx.fillStyle = '#E9C46A';
+      ctx.fillRect(0, groundY + 26, WORLD_LENGTH, height - groundY);
+
+      ctx.strokeStyle = '#1D3557';
+      ctx.lineWidth = 4;
+      ctx.beginPath();
+      ctx.moveTo(0, groundY);
+      ctx.lineTo(WORLD_LENGTH, groundY);
+      ctx.stroke();
+
+      // Landmark Signs
+      state.landmarks.forEach(lm => {
+        ctx.fillStyle = '#1D3557';
+        ctx.fillRect(lm.x - 4, groundY - 125, 8, 125);
+        ctx.fillStyle = lm.color;
+        ctx.strokeStyle = '#1D3557';
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.roundRect(lm.x - 105, groundY - 165, 210, 42, 14);
+        ctx.fill();
+        ctx.stroke();
+
+        ctx.fillStyle = '#FFFFFF';
+        ctx.font = 'bold 13px Fredoka';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(lm.label, lm.x, groundY - 144);
+      });
+
+      // Platforms
+      state.platforms.forEach(p => {
+        ctx.fillStyle = '#FFD166';
+        ctx.strokeStyle = '#1D3557';
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.roundRect(p.x, p.y, p.w, p.h, 11);
+        ctx.fill();
+        ctx.stroke();
+      });
+
+      // Items
+      state.items.forEach(item => {
+        if (!item.collected) drawCollectibleItem(ctx, item, time);
+      });
+
+      // Patrolling Minions
+      state.minions.forEach(m => {
+        if (m.alive) {
+          drawVirus(ctx, m.x, groundY - m.radius - 2, m.radius, '#EF476F', '#FFD166', time, false);
+        }
+      });
+
+      // Upcoming & Active Bosses
+      BOSS_STAGES.forEach((stage, idx) => {
+        if (idx < state.currentStageIdx) return;
+        const isCurrentBattle = state.activeBoss && state.activeBoss.id === stage.id;
+        const bx = isCurrentBattle ? state.activeBoss.x : stage.x + 170;
+        const by = (isCurrentBattle ? state.activeBoss.y : groundY - 72) + Math.sin(time * 0.004) * 8;
+        const hitOffset = isCurrentBattle && state.activeBoss.hitAnim > 0 ? Math.sin(time * 0.5) * 10 : 0;
+
+        drawVirus(ctx, bx + hitOffset, by, 54, stage.bossColor, stage.spikeColor, time, true);
+      });
+
+      // Player Character (blink when invulnerable)
+      if (player.invulnTimer <= 0 || Math.floor(player.invulnTimer / 5) % 2 === 0) {
+        drawHeroCharacter(
+          ctx,
+          state.selectedChar,
+          player.x,
+          player.y,
+          player.facing,
+          player.walkFrame,
+          player.shieldTimer > 0,
+          player.attackAnim
+        );
+      }
+
+      // Battle Projectiles
+      state.projectiles.forEach(pr => {
+        ctx.fillStyle = pr.color;
+        ctx.strokeStyle = '#1D3557';
+        ctx.lineWidth = 2.5;
+        ctx.beginPath();
+        ctx.arc(pr.x, pr.y, 13, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.stroke();
+      });
+
+      // Particles
+      state.particles.forEach(p => {
+        ctx.globalAlpha = Math.max(0, p.life);
+        ctx.fillStyle = p.color;
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.radius, 0, Math.PI * 2);
+        ctx.fill();
+      });
+      ctx.globalAlpha = 1;
+
+      // Floating Damage / Score Text
+      state.floatingTexts.forEach(ft => {
+        ctx.globalAlpha = Math.max(0, ft.life);
+        ctx.font = 'bold 18px Fredoka';
+        ctx.textAlign = 'center';
+        ctx.lineWidth = 4;
+        ctx.strokeStyle = '#FFFFFF';
+        ctx.strokeText(ft.text, ft.x, ft.y);
+        ctx.fillStyle = ft.color;
+        ctx.fillText(ft.text, ft.x, ft.y);
+      });
+      ctx.globalAlpha = 1;
+
+      ctx.restore();
+
+      // Win Screen Confetti Overlay
+      if (state.mode === 'WIN') {
+        state.confetti.forEach(c => {
+          ctx.save();
+          ctx.translate(c.x, c.y);
+          ctx.rotate(c.rot);
+          ctx.fillStyle = c.color;
+          ctx.fillRect(-c.w / 2, -c.h / 2, c.w, c.h);
+          ctx.restore();
+        });
+      }
+    }
+
+    function gameLoop(time) {
+      update(time);
+      drawBackground(time);
+      drawWorld(time);
+      requestAnimationFrame(gameLoop);
+    }
+
+    /**
+     * =========================================================================
+     * 11. EVENT LISTENERS, CHARACTER PREVIEWS & RESPONSIVE RESIZE
+     * =========================================================================
+     */
+    function handleResize() {
+      width = window.innerWidth;
+      height = window.innerHeight;
+      canvas.width = width;
+      canvas.height = height;
+      const oldGroundY = groundY;
+      groundY = height - 110;
+      const deltaY = groundY - oldGroundY;
+
+      player.y += deltaY;
+      state.platforms.forEach(p => p.y += deltaY);
+      state.items.forEach(it => it.y += deltaY);
+      if (state.activeBoss) state.activeBoss.y += deltaY;
+    }
+
+    window.addEventListener('resize', handleResize);
+
+    // Draw Character Previews on Start Screen
+    function renderCharPreviews() {
+      const c1 = document.getElementById('preview-kancil').getContext('2d');
+      c1.clearRect(0, 0, 140, 140);
+      drawHeroCharacter(c1, 'kancil', 70, 92, 1, 0, false, 0, true);
+
+      const c2 = document.getElementById('preview-raka').getContext('2d');
+      c2.clearRect(0, 0, 140, 140);
+      drawHeroCharacter(c2, 'raka', 70, 92, 1, 0, true, 0, true);
+    }
+
+    // Character Card Selection
+    document.querySelectorAll('.char-card').forEach(card => {
+      card.addEventListener('click', () => {
+        sfx.collect();
+        document.querySelectorAll('.char-card').forEach(c => c.classList.remove('selected'));
+        card.classList.add('selected');
+        state.selectedChar = card.dataset.char;
+      });
+    });
+
+    // Start & Restart Buttons
+    document.getElementById('btn-start-game').addEventListener('click', () => {
+      sfx.init();
+      sfx.correct();
+      document.getElementById('screen-start').classList.add('hidden');
+      document.getElementById('hud').classList.remove('hidden');
+      document.getElementById('touch-controls').classList.remove('hidden');
+      resetGame();
+    });
+
+    document.getElementById('btn-restart').addEventListener('click', () => {
+      sfx.correct();
+      document.getElementById('screen-end').classList.add('hidden');
+      document.getElementById('hud').classList.remove('hidden');
+      document.getElementById('touch-controls').classList.remove('hidden');
+      resetGame();
+    });
+
+    // Study Guide Modal
+    document.getElementById('btn-guide').addEventListener('click', () => {
+      sfx.collect();
+      document.getElementById('screen-guide').classList.remove('hidden');
+    });
+
+    document.getElementById('btn-close-guide').addEventListener('click', () => {
+      sfx.collect();
+      document.getElementById('screen-guide').classList.add('hidden');
+    });
+
+    // Mute Toggle
+    document.getElementById('btn-mute').addEventListener('click', (e) => {
+      const isMuted = sfx.toggleMute();
+      e.currentTarget.textContent = isMuted ? '🔇' : '🔊';
+    });
+
+    // Keyboard Controls
+    window.addEventListener('keydown', (e) => {
+      if (e.code === 'ArrowLeft' || e.code === 'KeyA') keys.left = true;
+      if (e.code === 'ArrowRight' || e.code === 'KeyD') keys.right = true;
+      if (e.code === 'ArrowUp' || e.code === 'KeyW' || e.code === 'Space') keys.up = true;
+    });
+
+    window.addEventListener('keyup', (e) => {
+      if (e.code === 'ArrowLeft' || e.code === 'KeyA') keys.left = false;
+      if (e.code === 'ArrowRight' || e.code === 'KeyD') keys.right = false;
+      if (e.code === 'ArrowUp' || e.code === 'KeyW' || e.code === 'Space') keys.up = false;
+    });
+
+    // Touch / Mouse On-Screen Controls
+    function bindTouchButton(btnId, keyName) {
+      const btn = document.getElementById(btnId);
+      const press = (e) => {
+        e.preventDefault();
+        keys[keyName] = true;
+        btn.classList.add('pressed');
+      };
+      const release = (e) => {
+        e.preventDefault();
+        keys[keyName] = false;
+        btn.classList.remove('pressed');
+      };
+      btn.addEventListener('touchstart', press, { passive: false });
+      btn.addEventListener('touchend', release, { passive: false });
+      btn.addEventListener('touchcancel', release, { passive: false });
+      btn.addEventListener('mousedown', press);
+      btn.addEventListener('mouseup', release);
+      btn.addEventListener('mouseleave', release);
+    }
+
+    bindTouchButton('touch-left', 'left');
+    bindTouchButton('touch-right', 'right');
+    bindTouchButton('touch-jump', 'up');
+
+    // Initialize Canvas & Start Loop
+    handleResize();
+    renderCharPreviews();
+    buildWorld();
+    requestAnimationFrame(gameLoop);
+  </script>
+</body>
+</html>
